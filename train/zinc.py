@@ -4,7 +4,6 @@ from core.train_helper import run
 from core.get_data import create_dataset
 from core.get_model import create_model
 
-
 def train(train_loader, model, optimizer, evaluator, device, sharp):
     total_loss = 0
     N = 0

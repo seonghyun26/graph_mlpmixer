@@ -55,3 +55,4 @@ dataset/
 # logs and results
 logs/
 results/
+wandb/

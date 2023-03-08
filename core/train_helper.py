@@ -8,6 +8,7 @@ from core.asam import ASAM
 from torch_geometric.loader import DataLoader
 from sklearn.model_selection import StratifiedKFold
 
+import wandb
 
 def set_seed(seed):
     random.seed(seed)
@@ -26,7 +27,6 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         cfg.train.runs = 1
     else:
         seeds = [41, 95, 12, 35]
-
     writer, logger = config_logger(cfg)
 
     train_dataset, val_dataset, test_dataset = create_dataset(cfg)
@@ -48,6 +48,11 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         set_seed(seeds[run])
         model = create_model(cfg).to(cfg.device)
         print(f"\nNumber of parameters: {count_parameters(model)}")
+        wandb.init(
+            project="graph-MLPMixer",
+            name=cfg.model.gnn_type+"_"+str(seeds[run])+"_channelmix_share",
+            config=cfg,
+        )
 
         if cfg.train.optimizer == 'ASAM':
             sharp = True
@@ -67,6 +72,8 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         start_outer = time.time()
         per_epoch_time = []
         train_perf = best_val_perf = test_perf = float('-inf')
+        
+        #NOTE: training epoch
         for epoch in range(cfg.train.epochs):
             start = time.time()
             model.train()
@@ -91,7 +98,13 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
             print(f'Epoch: {epoch:03d}, Train perf: {train_perf:.4f}, Train Loss: {train_loss:.4f}, '
                   f'Val: {val_perf:.4f}, Test: {test_perf:.4f}, Seconds: {time_cur_epoch:.4f}')
             #   f'Memory Peak: {memory_allocated} MB allocated, {memory_reserved} MB reserved.')
-
+            wandb.log({
+                "train loss": train_loss,
+                "train perf": train_perf,
+                "valid perf": val_perf,
+                "test perf": test_perf
+            })
+            
             writer.add_scalar(f'Run{run}/train-loss', train_loss, epoch)
             writer.add_scalar(f'Run{run}/train-perf', train_perf, epoch)
             writer.add_scalar(f'Run{run}/val-loss', val_loss, epoch)
@@ -129,6 +142,8 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         test_perfs.append(test_perf)
         per_epoch_times.append(per_epoch_time)
         total_times.append(total_time)
+        
+        wandb.finish()
 
     if cfg.train.runs > 1:
         train_loss = torch.tensor(train_losses)

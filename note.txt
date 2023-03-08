@@ -1,0 +1,3 @@
+CONFIG='train/configs/MPGNN/zinc.yaml'
+python -m train.zinc --config $CONFIG device 0 model.gnn_type ResGatedGraphConv
+python -m train.zinc --config train/configs/MPGNN/zinc.yaml device 0 model.gnn_type ResGatedGraphConv

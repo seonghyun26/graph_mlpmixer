@@ -23,7 +23,7 @@ class FeedForward(nn.Module):
 
 class MixerBlock(nn.Module):
 
-    def __init__(self, dim, num_patch, token_dim, channel_dim, dropout=0.):
+    def __init__(self, dim, num_patch, token_dim, channel_dim, channel_mix, dropout=0.):
         super().__init__()
         self.token_mix = nn.Sequential(
             nn.LayerNorm(dim),
@@ -31,10 +31,7 @@ class MixerBlock(nn.Module):
             FeedForward(num_patch, token_dim, dropout),
             Rearrange('b d n -> b n d')
         )
-        self.channel_mix = nn.Sequential(
-            nn.LayerNorm(dim),
-            FeedForward(dim, channel_dim, dropout),
-        )
+        self.channel_mix = channel_mix
 
     def forward(self, x, coarsen_adj):
         a_x = torch.matmul(coarsen_adj, x) if coarsen_adj is not None else x
@@ -53,8 +50,22 @@ class MLPMixer(nn.Module):
         super().__init__()
         self.n_patches = n_patches
         self.with_final_norm = with_final_norm
+        
+        # mixer blocks
+        # NOTE: original start
+        # self.mixer_blocks = nn.ModuleList(
+        #     [MixerBlock(nhid, self.n_patches, nhid*4, nhid//2, dropout=dropout) for _ in range(nlayer)])
+        # NOTE: original end
+        # NOTE: new start
+        self.channel_mix = nn.Sequential(
+            nn.LayerNorm(dim),
+            FeedForward(dim, channel_dim, dropout),
+        )
         self.mixer_blocks = nn.ModuleList(
-            [MixerBlock(nhid, self.n_patches, nhid*4, nhid//2, dropout=dropout) for _ in range(nlayer)])
+            [MixerBlock(nhid, self.n_patches, nhid*4, nhid//2, self.channel_mix, dropout=dropout) for _ in range(nlayer)]
+        )
+        # NOTE: new end
+        
         if self.with_final_norm:
             self.layer_norm = nn.LayerNorm(nhid)
 
