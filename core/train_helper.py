@@ -10,6 +10,9 @@ from sklearn.model_selection import StratifiedKFold
 
 import wandb
 
+TAG = "reproduce"
+# onlyChannelMixer, reproduce
+
 def set_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -48,9 +51,11 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         set_seed(seeds[run])
         model = create_model(cfg).to(cfg.device)
         print(f"\nNumber of parameters: {count_parameters(model)}")
+        cfg.seed=seeds[run]
         wandb.init(
             project="graph-MLPMixer",
-            name=cfg.model.gnn_type+"_"+str(seeds[run])+"_channelmix_share",
+            name=cfg.model.gnn_type+"_"+TAG,
+            tags=[TAG],
             config=cfg,
         )
 
@@ -82,6 +87,8 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
             model.eval()
             val_perf, val_loss = test(val_loader, model,
                                       evaluator=evaluator, device=cfg.device)
+            
+            # Test performance calculated only when valid performance reaches a new high valid perf
             if val_perf >= best_val_perf:
                 best_val_perf = val_perf
                 test_perf, test_loss = test(test_loader, model,
@@ -206,6 +213,8 @@ def run_k_fold(cfg, create_dataset, create_model, train, test, evaluator=None, k
     total_times = []
     for run in range(cfg.train.runs):
         set_seed(seeds[run])
+        cfg.seed=seeds[run]
+        
         for fold, (train_idx, test_idx) in enumerate(zip(*k_fold_indices)):
             train_dataset = dataset[train_idx]
             test_dataset = dataset[test_idx]
@@ -229,6 +238,13 @@ def run_k_fold(cfg, create_dataset, create_model, train, test, evaluator=None, k
                                                                    factor=cfg.train.lr_decay,
                                                                    patience=cfg.train.lr_patience,
                                                                    verbose=True)
+            cfg.fold = fold
+            wandb.init(
+                project="graph-MLPMixer",
+                name=cfg.model.gnn_type+"_"+TAG,
+                tags=[TAG],
+                config=cfg,
+            )
 
             start_outer = time.time()
             per_epoch_time = []
@@ -253,6 +269,13 @@ def run_k_fold(cfg, create_dataset, create_model, train, test, evaluator=None, k
                 writer.add_scalar(f'Run{run}/train-perf', train_perf, epoch)
                 writer.add_scalar(f'Run{run}/test-loss', test_loss, epoch)
                 writer.add_scalar(f'Run{run}/test-perf', test_perf, epoch)
+                wandb.log({
+                    "train loss": train_loss,
+                    "train perf": train_perf,
+                    "test perf": test_perf,
+                    "best test perf": best_test_perf,
+                    "seconds": time_cur_epoch
+                })
 
                 if optimizer.param_groups[0]['lr'] < cfg.train.min_lr:
                     print("!! LR EQUAL TO MIN LR SET.")
