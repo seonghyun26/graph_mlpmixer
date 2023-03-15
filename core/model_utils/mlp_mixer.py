@@ -22,7 +22,7 @@ class FeedForward(nn.Module):
 
 
 class MixerBlock(nn.Module):
-    # dim = n_patches
+        # dim = hidden dimension, num_patch = number of patches, token_dim = hidden dime * 4
     def __init__(self, dim, num_patch, token_dim, channel_dim, dropout=0.):
         super().__init__()
         # batch size, num of patch, dim
@@ -32,26 +32,31 @@ class MixerBlock(nn.Module):
             FeedForward(num_patch, token_dim, dropout),
             Rearrange('b d n -> b n d')
         )
-        # self.channel_mix = channel_mix
-        #NOTE: change channel_mix to share weight in a layer
         self.channel_mix = nn.Sequential(
             nn.LayerNorm(dim),
             FeedForward(dim, channel_dim, dropout),
         )
-        self.channel_mix2 = nn.Sequential(
-            nn.LayerNorm(1),
-            FeedForward(1, channel_dim, dropout),
+        #NOTE: change channel_mix to share weight in a layer
+        self.channel_mix_share = nn.Sequential(
+            nn.LayerNorm(dim),
+            FeedForward(dim, channel_dim, dropout),
         )
 
     def forward(self, x, coarsen_adj):
-        # print(x.shape)
+        # a_x.shape [120, 32, 128]
+        # x.shape [120, 32, 128]
         a_x = torch.matmul(coarsen_adj, x) if coarsen_adj is not None else x
         # NOTE: ORIGINAL
-        x = x + self.token_mix(a_x)
-        x = x + self.channel_mix(x)
+        # x = x + self.token_mix(a_x)
+        # x = x + self.channel_mix(x)
+        
+        # NOTE: Sharing token mixers among tokens
+        tokens = x.chunk(32, 1)
+        tokens = [self.channel_mix_share(token.squeeze()) for token in tokens]
+        tokens = x + torch.stack(tokens, dim=1)
         
         # NOTE: Channel Mix Only
-        # x = x + self.channel_mix(a_x)
+        x = x + self.channel_mix(a_x)
         return x
 
 

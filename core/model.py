@@ -91,7 +91,11 @@ class GraphMLPMixer(nn.Module):
         coarsen_adj = None
         if self.use_patch_pe:
             coarsen_adj = self.reshape(data.coarsen_adj)
+        # NOTE: Make subgraph using scatter
         subgraph_x = scatter(x, batch_x, dim=0, reduce=self.pooling)
+        # subgraph_x.shape 3840, 128
+        # mixer_x.shape 120, 32, 128
+        # TODO: What does this reshape mean?
         mixer_x = self.reshape(subgraph_x)
         mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
 

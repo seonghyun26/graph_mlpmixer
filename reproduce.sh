@@ -3,19 +3,19 @@ CONFIG='train/configs/GraphMLPMixer/csl.yaml'
 nohup python -m train.csl --config $CONFIG device 0 model.gnn_type ResGatedGraphConv &
 nohup python -m train.csl --config $CONFIG device 1 model.gnn_type GINEConv          &
 nohup python -m train.csl --config $CONFIG device 2 model.gnn_type GCNConv           &
-nohup python -m train.csl --config $CONFIG device 3 model.gnn_type TransformerConv   &
+nohup python -m train.csl --config $CONFIG device 3 model.gnn_type TransformerConv   ;
 
 CONFIG='train/configs/GraphMLPMixer/exp.yaml'
-nohup python -m train.exp --config $CONFIG device 4 model.gnn_type ResGatedGraphConv &
-nohup python -m train.exp --config $CONFIG device 5 model.gnn_type GINEConv          &
-nohup python -m train.exp --config $CONFIG device 6 model.gnn_type GCNConv           &
-nohup python -m train.exp --config $CONFIG device 7 model.gnn_type TransformerConv   ;
+nohup python -m train.exp --config $CONFIG device 0 model.gnn_type ResGatedGraphConv &
+nohup python -m train.exp --config $CONFIG device 1 model.gnn_type GINEConv          &
+nohup python -m train.exp --config $CONFIG device 2 model.gnn_type GCNConv           &
+nohup python -m train.exp --config $CONFIG device 3 model.gnn_type TransformerConv   ;
 
 CONFIG='train/configs/GraphMLPMixer/sr25.yaml'
 nohup python -m train.sr25 --config $CONFIG device 0 model.gnn_type ResGatedGraphConv &
 nohup python -m train.sr25 --config $CONFIG device 1 model.gnn_type GINEConv          &
 nohup python -m train.sr25 --config $CONFIG device 2 model.gnn_type GCNConv           &
-nohup python -m train.sr25 --config $CONFIG device 3 model.gnn_type TransformerConv   &
+nohup python -m train.sr25 --config $CONFIG device 3 model.gnn_type TransformerConv   ;
 
 # ${workspaceFolder}/.env
 
@@ -57,11 +57,11 @@ nohup python -m train.sr25 --config $CONFIG device 3 model.gnn_type TransformerC
 # nohup python -m train.peptides_func --config $CONFIG device 2 model.gnn_type GCNConv           &
 # nohup python -m train.peptides_func --config $CONFIG device 3 model.gnn_type TransformerConv   &
 
-CONFIG='train/configs/GraphMLPMixer/peptides_struct.yaml'
-nohup python -m train.peptides_struct --config $CONFIG device 4 model.gnn_type ResGatedGraphConv &
-nohup python -m train.peptides_struct --config $CONFIG device 5 model.gnn_type GINEConv          &
-nohup python -m train.peptides_struct --config $CONFIG device 6 model.gnn_type GCNConv           &
-nohup python -m train.peptides_struct --config $CONFIG device 7 model.gnn_type TransformerConv   ;
+# CONFIG='train/configs/GraphMLPMixer/peptides_struct.yaml'
+# nohup python -m train.peptides_struct --config $CONFIG device 4 model.gnn_type ResGatedGraphConv &
+# nohup python -m train.peptides_struct --config $CONFIG device 5 model.gnn_type GINEConv          &
+# nohup python -m train.peptides_struct --config $CONFIG device 6 model.gnn_type GCNConv           &
+# nohup python -m train.peptides_struct --config $CONFIG device 7 model.gnn_type TransformerConv   ;
 
 # CONFIG='train/configs/GraphMLPMixer/tree_neighbour.yaml'
 # DEPTH=2

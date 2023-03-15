@@ -10,7 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 
 import wandb
 
-TAG = "reproduce"
+TAG = "onlyChannelMixer"
 # onlyChannelMixer, reproduce
 
 def set_seed(seed):
@@ -280,7 +280,8 @@ def run_k_fold(cfg, create_dataset, create_model, train, test, evaluator=None, k
                 if optimizer.param_groups[0]['lr'] < cfg.train.min_lr:
                     print("!! LR EQUAL TO MIN LR SET.")
                     break
-
+            
+            wandb.finish()
             per_epoch_time = np.mean(per_epoch_time)
             total_time = (time.time()-start_outer)/3600
 
