@@ -17393,3 +17393,12 @@ wandb:
 wandb: 🚀 View run GATConv_onlyChannelMixer at: https://wandb.ai/eddy26/graph-MLPMixer/runs/vhn9uemm
 wandb: Synced 6 W&B file(s), 0 media file(s), 0 artifact file(s) and 0 other file(s)
 wandb: Find logs at: ./wandb/run-20230314_143908-vhn9uemm/logs
+wandb: Currently logged in as: eddy26. Use `wandb login --relogin` to force relogin
+wandb: wandb version 0.14.0 is available!  To upgrade, please run:
+wandb:  $ pip install wandb --upgrade
+wandb: Tracking run with wandb version 0.13.11
+wandb: Run data is saved locally in /home/shpark/graph-MLPMixer/wandb/run-20230315_012041-4c9bjvab
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run ResGatedGraphConv_onlyChannelMixer
+wandb: ⭐️ View project at https://wandb.ai/eddy26/graph-MLPMixer
+wandb: 🚀 View run at https://wandb.ai/eddy26/graph-MLPMixer/runs/4c9bjvab

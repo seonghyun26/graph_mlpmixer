@@ -11,7 +11,7 @@ from sklearn.model_selection import StratifiedKFold
 import wandb
 
 TAG = "onlyChannelMixer"
-# onlyChannelMixer, reproduce
+# onlyChannelMixer, reproduce, toytest
 
 def set_seed(seed):
     random.seed(seed)

@@ -36,7 +36,6 @@ class MixerBlock(nn.Module):
             nn.LayerNorm(dim),
             FeedForward(dim, channel_dim, dropout),
         )
-        #NOTE: change channel_mix to share weight in a layer
         self.channel_mix_share = nn.Sequential(
             nn.LayerNorm(dim),
             FeedForward(dim, channel_dim, dropout),
@@ -51,12 +50,15 @@ class MixerBlock(nn.Module):
         # x = x + self.channel_mix(x)
         
         # NOTE: Sharing token mixers among tokens
+        x = x + self.token_mix(a_x)
         tokens = x.chunk(32, 1)
         tokens = [self.channel_mix_share(token.squeeze()) for token in tokens]
         tokens = x + torch.stack(tokens, dim=1)
+        x = tokens
         
         # NOTE: Channel Mix Only
-        x = x + self.channel_mix(a_x)
+        # x = x + self.channel_mix(a_x)
+        
         return x
 
 
