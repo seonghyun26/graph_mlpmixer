@@ -45,12 +45,11 @@
 # nohup python -m train.peptides_func --config $CONFIG device 2 model.gnn_type GCNConv           &
 # nohup python -m train.peptides_func --config $CONFIG device 3 model.gnn_type TransformerConv   &
 
-# Graph MLPMixer
 # CONFIG='train/configs/GraphMLPMixer/peptides_struct.yaml'
 # nohup python -m train.peptides_struct --config $CONFIG device 0 model.gnn_type ResGatedGraphConv &
 # nohup python -m train.peptides_struct --config $CONFIG device 1 model.gnn_type GINEConv          &
 # nohup python -m train.peptides_struct --config $CONFIG device 2 model.gnn_type GCNConv           &
-# nohup python -m train.peptides_struct --config $CONFIG device 3 model.gnn_type TransformerConv   ;
+# nohup python -m train.peptides_struct --config $CONFIG device 4 model.gnn_type TransformerConv   ;
 
 # CONFIG='train/configs/GraphMLPMixer/moltox21.yaml'
 # nohup python -m train.moltox21 --config $CONFIG device 4 model.gnn_type ResGatedGraphConv &
@@ -58,7 +57,7 @@
 # nohup python -m train.moltox21 --config $CONFIG device 6 model.gnn_type GCNConv           &
 # nohup python -m train.moltox21 --config $CONFIG device 7 model.gnn_type TransformerConv   ;
 
-CONFIG='train/configs/GraphMLPMixer/tree_neighbour.yaml'
+# CONFIG='train/configs/GraphMLPMixer/tree_neighbour.yaml'
 # DEPTH=2
 # nohup python -m train.tree_neighbour --config $CONFIG depth $DEPTH metis.n_patches 8 train.dropout 0.5 device 0 model.gnn_type GATConv           &
 # nohup python -m train.tree_neighbour --config $CONFIG depth $DEPTH metis.n_patches 8 train.dropout 0.5 device 1 model.gnn_type GINEConv          &
@@ -72,10 +71,3 @@ CONFIG='train/configs/GraphMLPMixer/tree_neighbour.yaml'
 #     nohup python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn $NLAYER_GNN device 2 model.gnn_type GCNConv           &
 #     nohup python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn $NLAYER_GNN device 3 model.gnn_type GatedGraphConv    ;
 # done
-
-python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn 4 device 3 model.gnn_type GatedGraphConv    ;
-python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn 5 device 3 model.gnn_type GatedGraphConv    ;
-python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn 6 device 3 model.gnn_type GatedGraphConv    ;
-python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn 7 device 3 model.gnn_type GatedGraphConv    ;
-python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn 8 device 3 model.gnn_type GatedGraphConv    ;
-python -m train.tree_neighbour --config $CONFIG model.nlayer_gnn 9 device 3 model.gnn_type GatedGraphConv    ;

@@ -92,6 +92,8 @@ def set_cfg(cfg):
     cfg.metis.drop_rate = 0.3
     # expanding patches with k hop neighbourhood
     cfg.metis.num_hops = 1
+    
+    cfg.wandb = True
 
     return cfg
 

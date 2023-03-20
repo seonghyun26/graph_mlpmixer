@@ -56,11 +56,13 @@ class GraphMLPMixer(nn.Module):
             [MLP(nhid, nhid, nlayer=1, with_final_activation=True) for _ in range(nlayer_gnn-1)])
 
         self.reshape = Rearrange('(B p) d ->  B p d', p=self.n_patches)
-        self.mlp_mixer = MLPMixer(
-            nlayer=nlayer_mlpmixer, nhid=nhid, n_patches=n_patches, dropout=mlpmixer_dropout)
+        # self.mlp_mixer = MLPMixer(
+            # nlayer=nlayer_mlpmixer, nhid=nhid, n_patches=n_patches, dropout=mlpmixer_dropout)
 
         self.output_decoder = MLP(
             nhid, nout, nlayer=2, with_final_activation=False)
+        
+        # self.highGNN = GNN(nin=nhid, nout=nhid, nlayer_gnn=1, gnn_type=gnn_type, bn=bn, dropout=dropout, res=res)
 
     def forward(self, data):
         # Patch Encoder
@@ -91,13 +93,16 @@ class GraphMLPMixer(nn.Module):
         coarsen_adj = None
         if self.use_patch_pe:
             coarsen_adj = self.reshape(data.coarsen_adj)
-        # NOTE: Make subgraph using scatter
         subgraph_x = scatter(x, batch_x, dim=0, reduce=self.pooling)
-        # subgraph_x.shape 3840, 128
-        # mixer_x.shape 120, 32, 128
-        # TODO: What does this reshape mean?
         mixer_x = self.reshape(subgraph_x)
-        mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
+        
+        # NOTE: Original Mixer Layer
+        # mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
+        
+        # TODO: Use subgraphs as node + new edge made with pooling, GNN
+        # Modify Coarsen_adj for patch encoding
+        # scatter, batch_x used to make a subgraph
+        
 
         # Global Average Pooling
         x = (mixer_x * data.mask.unsqueeze(-1)).sum(1) / \
@@ -343,7 +348,8 @@ class GraphMLPMixer4TreeNeighbour(nn.Module):
             coarsen_adj = self.reshape(data.coarsen_adj)
         subgraph_x = scatter(x, batch_x, dim=0, reduce=self.pooling)
         mixer_x = self.reshape(subgraph_x)
-        mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
+        # Without Mixer Layer
+        # mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
         mixer_x = self.reshape2(mixer_x)[data.subgraphs_batch]
 
         # Readout

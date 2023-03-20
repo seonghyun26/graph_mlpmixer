@@ -10,8 +10,8 @@ from sklearn.model_selection import StratifiedKFold
 
 import wandb
 
-TAG = "onlyChannelMixer"
-# onlyChannelMixer, reproduce, toytest
+TAG = "onlyPooling"
+# onlyChannelMixer, reproduce, toytest, onlyPooling
 
 def set_seed(seed):
     random.seed(seed)
@@ -52,12 +52,13 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         model = create_model(cfg).to(cfg.device)
         print(f"\nNumber of parameters: {count_parameters(model)}")
         cfg.seed=seeds[run]
-        wandb.init(
-            project="graph-MLPMixer",
-            name=cfg.model.gnn_type+"_"+TAG,
-            tags=[TAG],
-            config=cfg,
-        )
+        if cfg.wandb:
+            wandb.init(
+                project="graph-MLPMixer",
+                name=cfg.model.gnn_type+"_"+TAG,
+                tags=[TAG],
+                config=cfg,
+            )
 
         if cfg.train.optimizer == 'ASAM':
             sharp = True
@@ -105,12 +106,13 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
             print(f'Epoch: {epoch:03d}, Train perf: {train_perf:.4f}, Train Loss: {train_loss:.4f}, '
                   f'Val: {val_perf:.4f}, Test: {test_perf:.4f}, Seconds: {time_cur_epoch:.4f}')
             #   f'Memory Peak: {memory_allocated} MB allocated, {memory_reserved} MB reserved.')
-            wandb.log({
-                "train loss": train_loss,
-                "train perf": train_perf,
-                "valid perf": val_perf,
-                "test perf": test_perf
-            })
+            if cfg.wandb:
+                wandb.log({
+                    "train loss": train_loss,
+                    "train perf": train_perf,
+                    "valid perf": val_perf,
+                    "test perf": test_perf
+                })
             
             writer.add_scalar(f'Run{run}/train-loss', train_loss, epoch)
             writer.add_scalar(f'Run{run}/train-perf', train_perf, epoch)
@@ -150,7 +152,8 @@ def run(cfg, create_dataset, create_model, train, test, evaluator=None):
         per_epoch_times.append(per_epoch_time)
         total_times.append(total_time)
         
-        wandb.finish()
+        if cfg.wandb:
+            wandb.finish()
 
     if cfg.train.runs > 1:
         train_loss = torch.tensor(train_losses)
@@ -239,12 +242,13 @@ def run_k_fold(cfg, create_dataset, create_model, train, test, evaluator=None, k
                                                                    patience=cfg.train.lr_patience,
                                                                    verbose=True)
             cfg.fold = fold
-            wandb.init(
-                project="graph-MLPMixer",
-                name=cfg.model.gnn_type+"_"+TAG,
-                tags=[TAG],
-                config=cfg,
-            )
+            if cfg.wandb:    
+                wandb.init(
+                    project="graph-MLPMixer",
+                    name=cfg.model.gnn_type+"_"+TAG,
+                    tags=[TAG],
+                    config=cfg,
+                )
 
             start_outer = time.time()
             per_epoch_time = []
@@ -269,19 +273,21 @@ def run_k_fold(cfg, create_dataset, create_model, train, test, evaluator=None, k
                 writer.add_scalar(f'Run{run}/train-perf', train_perf, epoch)
                 writer.add_scalar(f'Run{run}/test-loss', test_loss, epoch)
                 writer.add_scalar(f'Run{run}/test-perf', test_perf, epoch)
-                wandb.log({
-                    "train loss": train_loss,
-                    "train perf": train_perf,
-                    "test perf": test_perf,
-                    "best test perf": best_test_perf,
-                    "seconds": time_cur_epoch
-                })
+                if cfg.wandb:
+                    wandb.log({
+                        "train loss": train_loss,
+                        "train perf": train_perf,
+                        "test perf": test_perf,
+                        "best test perf": best_test_perf,
+                        "seconds": time_cur_epoch
+                    })
 
                 if optimizer.param_groups[0]['lr'] < cfg.train.min_lr:
                     print("!! LR EQUAL TO MIN LR SET.")
                     break
             
-            wandb.finish()
+            if cfg.wandb:
+                wandb.finish()
             per_epoch_time = np.mean(per_epoch_time)
             total_time = (time.time()-start_outer)/3600
 

@@ -54,4 +54,5 @@ def test(loader, model, evaluator, device):
 if __name__ == '__main__':
     cfg.merge_from_file('train/configs/GraphMLPMixer/tree_neighbour.yaml')
     cfg = update_cfg(cfg)
+    # print("ASDF")
     run(cfg, create_dataset, create_model, train, test)
