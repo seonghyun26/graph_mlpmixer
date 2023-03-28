@@ -46,6 +46,6 @@ def config_logger(cfg, OUT_PATH="results/", time=False):
     print("-"*50)
     print(cfg)
     print("-"*50)
-    print('Time:', datetime.datetime.now().strftime("%Y/%m/%d - %H:%M"))
+    print('Time:', datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime("%Y/%m/%d - %H:%M"))
 
     return writer, logger

@@ -10,8 +10,8 @@ from sklearn.model_selection import StratifiedKFold
 
 import wandb
 
-TAG = "onlyPooling"
-# onlyChannelMixer, reproduce, toytest, onlyPooling
+TAG = "gnnLayer"
+# onlyChannelMixer, reproduce, toytest, onlyPooling, edgePooling, partitionTest, layerTest
 
 def set_seed(seed):
     random.seed(seed)

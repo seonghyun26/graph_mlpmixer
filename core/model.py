@@ -10,7 +10,6 @@ from core.model_utils.gnn import GNN
 from core.model_utils.mlp_mixer import MLPMixer
 from core.model_utils.transformer import TransformerEncoderLayer
 
-
 class GraphMLPMixer(nn.Module):
 
     def __init__(self,
@@ -56,13 +55,12 @@ class GraphMLPMixer(nn.Module):
             [MLP(nhid, nhid, nlayer=1, with_final_activation=True) for _ in range(nlayer_gnn-1)])
 
         self.reshape = Rearrange('(B p) d ->  B p d', p=self.n_patches)
-        # self.mlp_mixer = MLPMixer(
-            # nlayer=nlayer_mlpmixer, nhid=nhid, n_patches=n_patches, dropout=mlpmixer_dropout)
+        self.mlp_mixer = MLPMixer(
+            nlayer=nlayer_mlpmixer, nhid=nhid, n_patches=n_patches, dropout=mlpmixer_dropout)
 
         self.output_decoder = MLP(
             nhid, nout, nlayer=2, with_final_activation=False)
         
-        # self.highGNN = GNN(nin=nhid, nout=nhid, nlayer_gnn=1, gnn_type=gnn_type, bn=bn, dropout=dropout, res=res)
 
     def forward(self, data):
         # Patch Encoder
@@ -76,10 +74,22 @@ class GraphMLPMixer(nn.Module):
             edge_attr = data.edge_index.new_zeros(data.edge_index.size(-1))
         edge_attr = self.edge_encoder(edge_attr)
 
+        # NOTE: Original
         x = x[data.subgraphs_nodes_mapper]
         e = edge_attr[data.subgraphs_edges_mapper]
         edge_index = data.combined_subgraphs
         batch_x = data.subgraphs_batch
+        # TODO: exp on input graph
+        # xPadded = torch.zeros(data.subgraphs_nodes_mapper.shape[0], x.shape[1], dtype=x.dtype).to(data.x.device)
+        # xPadded[:x.shape[0], :] = x
+        # ePadded = torch.zeros(data.subgraphs_edges_mapper.shape[0], edge_attr.shape[1], dtype=edge_attr.dtype).to(data.x.device)
+        # ePadded[:edge_attr.shape[0], :] = edge_attr
+        # edgeIndexPadded = torch.zeros(data.edge_index.shape[0], data.combined_subgraphs.shape[1], dtype=data.edge_index.dtype).to(data.x.device)
+        # edgeIndexPadded[:, :data.edge_index.shape[1]] = data.edge_index
+        # batch_x = torch.zeros(data.subgraphs_batch.shape[0], dtype=data.subgraphs_batch.dtype).to(data.x.device)
+        # batch_x[:data.x.shape[0]] = torch.ones(data.x.shape[0])
+        # batch_x[-30:] = torch.arange(2, 32)
+        
         for i, gnn in enumerate(self.gnns):
             if i > 0:
                 subgraph = scatter(x, batch_x, dim=0,
@@ -88,27 +98,43 @@ class GraphMLPMixer(nn.Module):
                 x = scatter(x, data.subgraphs_nodes_mapper,
                             dim=0, reduce='mean')[data.subgraphs_nodes_mapper]
             x = gnn(x, edge_index, e)
+            # xPadded = gnn(xPadded, edgeIndexPadded, ePadded)
 
         # MLPMixer
-        coarsen_adj = None
+        # coarsen_adj = None
         if self.use_patch_pe:
             coarsen_adj = self.reshape(data.coarsen_adj)
         subgraph_x = scatter(x, batch_x, dim=0, reduce=self.pooling)
         mixer_x = self.reshape(subgraph_x)
         
-        # NOTE: Original Mixer Layer
-        # mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
-        
-        # TODO: Use subgraphs as node + new edge made with pooling, GNN
+        # NOTE: Use subgraphs as node + new edge made with pooling, GNN
         # Modify Coarsen_adj for patch encoding
         # scatter, batch_x used to make a subgraph
+        # count = torch.bincount(data.subgraphs_edges_mapper) >= 2
+        # index = count.nonzero().squeeze()
+        # edgePoolMatrix = torch.zeros(data.coarsen_adj.shape).to(data.edge_index.device)
+        # hiddenDim = coarsen_adj.shape[0]
         
+        # if coarsen_adj.shape[0] == 128:
+        #     for id_ in index:
+        #         edgePoolMatrix[batch_x[data.edge_index[0][id_]]][batch_x[data.edge_index[1][id_]]//hiddenDim] += data.edge_attr[id_]
+        #     # edgePoolMatrix[batch_x[data.edge_index[:,index]]//hiddenDim]+= edge_attr[index]
+        #     edgePoolMatrix = self.reshape(edgePoolMatrix)
+        # else:
+        #     edgePoolMatrix = coarsen_adj
+        
+        
+        # NOTE: Original Mixer Layer
+        mixer_x = self.mlp_mixer(mixer_x, coarsen_adj)
+        # NOTE: NEW edge Pool matrix
+        # mixer_x = self.mlp_mixer(mixer_x, edgePoolMatrix)
 
         # Global Average Pooling
         x = (mixer_x * data.mask.unsqueeze(-1)).sum(1) / \
             data.mask.sum(1, keepdim=True)
+        # x = x.sum(0)
 
-        # Readout
+        # Readout - decoder input 128 128
         x = self.output_decoder(x)
         return x
 
